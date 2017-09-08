@@ -1,7 +1,7 @@
 package com.jiayuqicz.game;
 
-import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.GL20;
@@ -14,9 +14,9 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.TimeUtils;
 
-public class MyGdxGame extends ApplicationAdapter {
+public class DropGameScreen implements Screen {
 
-//	Texture img;
+    private DropGame game;
 	private Texture bucketImage = null;
 	private Texture rainImage = null;
 	private Sound dropSound = null;
@@ -30,12 +30,13 @@ public class MyGdxGame extends ApplicationAdapter {
 
     private Array<Rectangle> drops = null;
     private long lastDropTime;
-	
-	@Override
-	public void create () {
-		batch = new SpriteBatch();
-//		img = new Texture("badlogic.jpg");
-		bucketImage = new Texture(Gdx.files.internal("bucket.png"));
+
+    public DropGameScreen (DropGame game) {
+
+        this.game = game;
+
+        batch = new SpriteBatch();
+        bucketImage = new Texture(Gdx.files.internal("bucket.png"));
         rainImage = new Texture(Gdx.files.internal("raindrop.png"));
 
         dropSound = Gdx.audio.newSound(Gdx.files.internal("dropSound.wav"));
@@ -55,10 +56,10 @@ public class MyGdxGame extends ApplicationAdapter {
         touch = new Vector3();
         drops = new Array<Rectangle>();
         spawnDrop();
-	}
+    }
 
 	@Override
-	public void render () {
+	public void render (float delta) {
 		Gdx.gl.glClearColor(255,255,255, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         camera.update();
@@ -101,8 +102,33 @@ public class MyGdxGame extends ApplicationAdapter {
         drops.add(drop);
         lastDropTime = TimeUtils.nanoTime();
     }
-	
-	@Override
+
+    @Override
+    public void show() {
+
+    }
+
+    @Override
+    public void resize(int width, int height) {
+
+    }
+
+    @Override
+    public void pause() {
+
+    }
+
+    @Override
+    public void resume() {
+
+    }
+
+    @Override
+    public void hide() {
+
+    }
+
+    @Override
 	public void dispose () {
 		batch.dispose();
         dropSound.dispose();
