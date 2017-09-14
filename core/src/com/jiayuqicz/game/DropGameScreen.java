@@ -22,6 +22,13 @@ public class DropGameScreen implements Screen {
 	private Sound dropSound = null;
 	private Music rainMusic = null;
 
+
+    private final int left = 0;
+    private final int center = 1;
+    private final int right = 2;
+
+    private int direction = center;
+
     private OrthographicCamera camera = null;
     private SpriteBatch batch = null;
     private Rectangle bucket = null;
@@ -76,11 +83,42 @@ public class DropGameScreen implements Screen {
             touch.set(Gdx.input.getX(), Gdx.input.getY(), 0);
             camera.unproject(touch);
             bucket.x = touch.x - 32;
+
+            if (touch.x < 400) {
+                direction = right;
+            }
+            else {
+                direction = left;
+            }
+
         }
 
         for (Rectangle drop : drops) {
-            drop.y -= Gdx.graphics.getDeltaTime() * 200;
-            if (drop.y < 0) drops.removeValue(drop, false);
+
+            switch (direction) {
+                case center :
+                    center(drop);
+                    break;
+                case left :
+                    left(drop);
+                    break;
+                case right:
+                    right(drop);
+                    break;
+            }
+
+
+            if (drop.y < 0) {
+                drops.removeValue(drop, false);
+            }
+
+            if ((drop.x < 0)) {
+                direction = right;
+            }
+            if (drop.x > 800-64) {
+                direction = left;
+            }
+
             if (drop.overlaps(bucket)) {
                 drops.removeValue(drop, false);
                 dropSound.play();
@@ -89,14 +127,31 @@ public class DropGameScreen implements Screen {
 
         if (TimeUtils.nanoTime() - lastDropTime > 1000000000) {
             spawnDrop();
+            Gdx.app.log("test", String.valueOf(touch.x));
+            Gdx.app.log("test", String.valueOf(direction));
         }
 
 	}
 
-	private void spawnDrop() {
+	private void left(Rectangle drop) {
+        drop.y -= Gdx.graphics.getDeltaTime() * 200;
+        drop.x -= Gdx.graphics.getDeltaTime() * 200;
+    }
+
+    private void right(Rectangle drop) {
+        drop.y -= Gdx.graphics.getDeltaTime() * 200;
+        drop.x += Gdx.graphics.getDeltaTime() * 200;
+    }
+
+    private void center(Rectangle drop) {
+        drop.y -= Gdx.graphics.getDeltaTime() * 200;
+    }
+
+
+    private void spawnDrop() {
         Rectangle drop = new Rectangle();
         drop.setY(480);
-        drop.setX(MathUtils.random(0,480-64));
+        drop.setX(MathUtils.random(0,800-64));
         drop.width = 64;
         drop.height = 64;
         drops.add(drop);
