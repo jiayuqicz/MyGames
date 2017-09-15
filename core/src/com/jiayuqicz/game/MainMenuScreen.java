@@ -34,7 +34,7 @@ class MainMenuScreen implements Screen{
         labelStyle.fontColor = Color.WHITE;
 
 
-        Label label2 = new Label("Touch anywhere to begin",labelStyle);
+        Label label2 = new Label("Touch anywhere to begin!",labelStyle);
         label2.setAlignment(Align.center);
         label2.setSize(col_width/6,row_height);
         label2.setColor(Color.BLACK);

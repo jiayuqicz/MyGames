@@ -30,7 +30,7 @@ public class DropGame extends Game {
     public void initStyle() {
         FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("font.ttf"));
         FreeTypeFontGenerator.FreeTypeFontParameter parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
-        parameter.size = 50;
+        parameter.size = 24;
         parameter.borderWidth = 1;
         parameter.color = Color.YELLOW;
         BitmapFont font24 = generator.generateFont(parameter); // font size 24 pixels
