@@ -4,7 +4,6 @@ import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 
@@ -14,31 +13,28 @@ import com.badlogic.gdx.scenes.scene2d.ui.Label;
 
 public class DropGame extends Game {
 
-    public SpriteBatch batch = null;
-    public Label.LabelStyle labelStyle = null;
-
-
-
     @Override
     public void create() {
-        initStyle();
-        batch = new SpriteBatch();
+        setScreen(new MainMenuScreen(this));
+    }
+
+    public void resetGame() {
         setScreen(new MainMenuScreen(this));
     }
 
 
-    public void initStyle() {
+    public Label.LabelStyle getFontStyle(int size, Color color) {
         FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("font.ttf"));
         FreeTypeFontGenerator.FreeTypeFontParameter parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
-        parameter.size = 24;
+        parameter.size = size;
         parameter.borderWidth = 1;
-        parameter.color = Color.YELLOW;
+        parameter.color = color;
         BitmapFont font24 = generator.generateFont(parameter); // font size 24 pixels
         generator.dispose();
 
-        labelStyle = new Label.LabelStyle();
+        Label.LabelStyle labelStyle = new Label.LabelStyle();
         labelStyle.font = font24;
-
+        return labelStyle;
     }
 
 
@@ -50,6 +46,5 @@ public class DropGame extends Game {
     @Override
     public void dispose() {
         super.dispose();
-        batch.dispose();
     }
 }

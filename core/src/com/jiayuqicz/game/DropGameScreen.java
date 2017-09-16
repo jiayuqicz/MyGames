@@ -26,16 +26,18 @@ public class DropGameScreen implements Screen, InputProcessor {
 	private Sound dropSound = null;
 	private Music rainMusic = null;
 
-    private boolean flag = true;
     private final int left = 0;
     private final int center = 1;
     private final int right = 2;
 
-    private int row_height = Gdx.graphics.getHeight();
-    private int col_width = Gdx.graphics.getWidth();
+    private int height = 480;
+    private int width = 800;
 
-    private Label.LabelStyle labelStyle;
-    private Label score = null;
+    private Label scoreLabel = null;
+    private int score = 0;
+
+    private Label total;
+    private boolean gameover = false;
 
     private int direction = center;
 
@@ -49,7 +51,6 @@ public class DropGameScreen implements Screen, InputProcessor {
 
     private Array<Rectangle> drops = null;
     private long lastDropTime = 0;
-    private long lastShadow = 0;
 
     public DropGameScreen (DropGame game) {
         this.game = game;
@@ -60,14 +61,17 @@ public class DropGameScreen implements Screen, InputProcessor {
 
     private void initView() {
 
-        labelStyle = game.labelStyle;
-        labelStyle.fontColor = Color.BLUE;
+        Label.LabelStyle labelStyle = game.getFontStyle(24, Color.BLUE);
 
+        scoreLabel = new Label("Score " + score, labelStyle);
+        scoreLabel.setAlignment(Align.topLeft);
+        scoreLabel.setSize(width, height);
+        scoreLabel.setPosition(10, 0);
 
-        score = new Label("Score：",labelStyle);
-        score.setAlignment(Align.top);
-        score.setSize(16,16);
-        score.setPosition(0, 400);
+        total = new Label("Game Over!\n" + "You got " + score + " Drops", labelStyle);
+        total.setAlignment(Align.center);
+        total.setSize(width, height);
+        total.setPosition(0, 0);
 
         batch = new SpriteBatch();
         bucketImage = new Texture(Gdx.files.internal("bucket.png"));
@@ -91,6 +95,7 @@ public class DropGameScreen implements Screen, InputProcessor {
         drops = new Array<Rectangle>();
 
         Gdx.input.setInputProcessor(this);
+        Gdx.graphics.setContinuousRendering(true);
         spawnDrop();
     }
 
@@ -106,10 +111,26 @@ public class DropGameScreen implements Screen, InputProcessor {
             batch.draw(rainImage, drop.x, drop.y);
         }
         batch.draw(bucketImage, bucket.x, bucket.y);
-        score.draw(batch, 12);
+        scoreLabel.draw(batch, 1);
+        if (gameover) {
+            total.setText("Game Over!\n" + "You got " + score + " Drops");
+            total.draw(batch, 1);
+        }
         batch.end();
 
         for (Rectangle drop : drops) {
+
+            if (drop.y < 0) {
+                drops.removeValue(drop, false);
+                Gdx.graphics.setContinuousRendering(false);
+                gameover = true;
+                batch.begin();
+                total.setText("Game Over!\n" + "You got " + score + " Drops");
+                total.draw(batch, 1);
+                batch.end();
+            }
+
+            if (gameover) break;
 
             if (drop == normalDrop && normalDrop !=null) {
                 center(drop);
@@ -128,41 +149,28 @@ public class DropGameScreen implements Screen, InputProcessor {
                 }
             }
 
-            if (abnormal != null && TimeUtils.nanoTime() - lastShadow > 1000) {
-                if (flag) {
-                    abnormal.x += 200;
-                }
-                else {
-                    abnormal.x -= 200;
-                }
-                flag = !flag;
-                lastShadow = TimeUtils.nanoTime();
-                if (abnormal.y <100) {
-                    abnormal = null;
-                }
-
-            }
-
-
-            if (drop.y < 0) {
-                drops.removeValue(drop, false);
-            }
-
             if ((drop.x < 0)) {
                 direction = right;
             }
-
-            if (drop.x > 800 - 64) {
+            else if(drop.x < -64){
+                drops.removeValue(drop, false);
+            }
+            else if (drop.x > 800 - 64) {
                 direction = left;
+            }
+            else if (drop.x > 800) {
+                drops.removeValue(drop, false);
             }
 
             if (drop.overlaps(bucket)) {
+                score++;
+                scoreLabel.setText("Score " + score);
                 drops.removeValue(drop, false);
                 dropSound.play();
             }
 
             //每一秒生成一个雨滴
-            if (TimeUtils.nanoTime() - lastDropTime > 1000000000) {
+            if (TimeUtils.millis() - lastDropTime > 1100) {
                 spawnDrop();
             }
 
@@ -170,13 +178,22 @@ public class DropGameScreen implements Screen, InputProcessor {
 	}
 
 	private void left(Rectangle drop) {
+        if (drop.x < 0) {
+            right(drop);
+        }
         drop.y -= Gdx.graphics.getDeltaTime() * 200;
-        drop.x -= Gdx.graphics.getDeltaTime() * 200;
+        drop.x -= Gdx.graphics.getDeltaTime() * 300;
     }
 
     private void right(Rectangle drop) {
+
+        if (drop.x > 800-64) {
+            left(drop);
+            return;
+        }
+
         drop.y -= Gdx.graphics.getDeltaTime() * 200;
-        drop.x += Gdx.graphics.getDeltaTime() * 200;
+        drop.x += Gdx.graphics.getDeltaTime() * 300;
     }
 
     private void center(Rectangle drop) {
@@ -197,7 +214,7 @@ public class DropGameScreen implements Screen, InputProcessor {
         drop.width = 64;
         drop.height = 64;
         drops.add(drop);
-        lastDropTime = TimeUtils.nanoTime();
+        lastDropTime = TimeUtils.millis();
 
         if (MathUtils.random(0,4)>3) {
             normal = true;
@@ -212,7 +229,6 @@ public class DropGameScreen implements Screen, InputProcessor {
 
         if (random) {
             abnormal = drop;
-            lastShadow = lastDropTime;
         }
     }
 
@@ -267,10 +283,21 @@ public class DropGameScreen implements Screen, InputProcessor {
 
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+
+        if (gameover) {
+
+            drops.clear();
+            gameover = false;
+            Gdx.graphics.setContinuousRendering(true);
+
+            score = 0;
+            spawnDrop();
+
+            return true;
+        }
+
         touch.set(screenX, screenY, 0);
         camera.unproject(touch);
-
-//        Gdx.app.log("test", String.valueOf(touch.x) + "--" + String.valueOf(touch.y));
 
         bucket.setX(touch.x-32);
 
@@ -281,7 +308,7 @@ public class DropGameScreen implements Screen, InputProcessor {
             direction = left;
 
         }
-        return false;
+        return true;
     }
 
     @Override
@@ -291,22 +318,22 @@ public class DropGameScreen implements Screen, InputProcessor {
 
     @Override
     public boolean touchDragged(int screenX, int screenY, int pointer) {
-        touch.set(screenX, screenY, 0);
-        camera.unproject(touch);
-
+//        touch.set(screenX, screenY, 0);
+//        camera.unproject(touch);
+//
 //        Gdx.app.log("test", String.valueOf(touch.x) + "--" + String.valueOf(touch.y));
+//
+//        bucket.setX(touch.x-32);
+//
+//        if (touch.x < 400) {
+//            direction = right;
+//        }
+//        else {
+//            direction = left;
+//
+//        }
 
-        bucket.setX(touch.x-32);
-
-        if (touch.x < 400) {
-            direction = right;
-        }
-        else {
-            direction = left;
-
-        }
-
-        return true;
+        return false;
     }
 
     @Override
